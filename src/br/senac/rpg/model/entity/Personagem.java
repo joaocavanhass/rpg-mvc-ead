@@ -1,12 +1,16 @@
 package br.senac.rpg.model.entity;
 
-public class Personagem {
+import br.senac.rpg.model.strategy.AtaqueBasicoStrategy;
+import br.senac.rpg.model.strategy.EstrategiaAtaque;
+
+public abstract class Personagem {
     private final String nome;
     private final String classe;
     private final int vidaMaxima;
     private int vidaAtual;
     private int ataqueBase;
     private int defesa;
+    private EstrategiaAtaque estrategiaAtaque;
 
     public Personagem(String nome, String classe, int vidaMaxima, int ataqueBase, int defesa) {
         if (nome == null || nome.trim().isEmpty()) {
@@ -18,6 +22,33 @@ public class Personagem {
         this.vidaAtual = vidaMaxima;
         this.ataqueBase = ataqueBase;
         this.defesa = defesa;
+        this.estrategiaAtaque = new AtaqueBasicoStrategy(); // Estratégia padrão
+    }
+
+    public void setEstrategiaAtaque(EstrategiaAtaque estrategiaAtaque) {
+        if (estrategiaAtaque == null) {
+            throw new IllegalArgumentException("A estratégia de ataque não pode ser nula.");
+        }
+        this.estrategiaAtaque = estrategiaAtaque;
+    }
+
+    public EstrategiaAtaque getEstrategiaAtaque() {
+        return estrategiaAtaque;
+    }
+
+    public int executarAtaque(Personagem alvo) {
+        if (!this.estaVivo()) {
+            throw new IllegalStateException(this.nome + " está derrotado e não pode atacar.");
+        }
+        if (alvo == null || !alvo.estaVivo()) {
+            throw new IllegalArgumentException("Alvo inválido ou já derrotado.");
+        }
+
+        int danoBruto = this.estrategiaAtaque.calcularDano(this, alvo);
+        if (danoBruto == 0) {
+            return 0; // Ataque errou
+        }
+        return alvo.receberDano(danoBruto);
     }
 
     public int receberDano(int danoBruto) {
